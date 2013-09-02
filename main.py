@@ -21,8 +21,11 @@ mu_grid = np.linspace(-1, 1, n_mu_pts)
 
 # positive angle points
 mu_grid_m = mu_grid[:n_mu_pts/2]
+n_mu_pts_m = len(mu_grid_m)
+
 # negative angle points
 mu_grid_p = mu_grid[n_mu_pts/2 + 1:]
+n_mu_pts_p = len(mu_grid_p)
 
 # optical depth grid
 tau_grid = np.logspace(-7, 3, n_tau_pts)
@@ -105,6 +108,51 @@ for i in range(1, n_tau_pts-1):
     Lambda[i-1, i] = 0.25 * simps(i_hat_m_im1[i] + i_hat_m_ip1[i])
     Lambda[i  , i] = 0.25 * simps(i_hat_m_i  [i] + i_hat_m_i  [i])
     Lambda[i+1, i] = 0.25 * simps(i_hat_m_ip1[i] + i_hat_m_ip1[i])
+
+# <codecell>
+
+# source function, assumed to be isotropic (so no angle dependence)
+def source_fn(i):
+    return (planck_fn(1)) # TODO: fix this
+
+# Planck function
+def planck_fn(T):
+    return (1)
+
+# <codecell>
+
+# specific intensity
+I_lam_p = np.zeros([n_tau_pts, n_mu_pts_p])
+I_lam_m = np.zeros([n_tau_pts, n_mu_pts_m])
+
+# outward intensity at depth should be the diffusion condition (TODO: FIX THIS. RIGHT NOW IT'S JUST THE PLANCK FUNCTION)
+I_lam_p[n_tau_pts-1,:] = planck_fn(1)
+
+# inward intensity at the surface is zero
+I_lam_m[0,:] = 0
+
+# <codecell>
+
+# formal solution stuff
+
+def Delta_I_p(i, j):
+    return (alpha_p(i, j) * source_fn(i-1) + beta_p(i, j) * source_fn(i) + gamma_p(i, j) * source_fn(i+1))
+
+def Delta_I_m(i, j):
+    return (alpha_m(i, j) * source_fn(i-1) + beta_m(i, j) * source_fn(i) + gamma_m(i, j) * source_fn(i+1))
+
+def calc_formal_soln():
+    for i in range(n_tau_pts-1, 0, -1):
+        for j in range(n_mu_pts_p):
+            I_lam_p[i, j] = I_lam_p[i+1, j] * exp(-delta_tau(i, j)) + Delta_I_p(i, j)
+    for i in range(n_tau_pts):
+        for j in range(1, n_mu_pts_m):
+            I_lam_m[i, j] = I_lam_m[i-1, j] * exp(-delta_tau(i-1, j)) + Delta_I_m(i, j)
+
+# <codecell>
+
+calc_formal_soln
+print(I_lam_p)
 
 # <codecell>
 
