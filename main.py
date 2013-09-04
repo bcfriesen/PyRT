@@ -10,7 +10,6 @@ import numpy as np
 # number of angle points
 n_mu_pts = 50
 
-
 # number of optical depth points
 n_tau_pts = 10
 
@@ -20,11 +19,11 @@ n_tau_pts = 10
 mu_grid = np.linspace(-1, 1, n_mu_pts)
 
 # positive angle points
-mu_grid_m = mu_grid[:n_mu_pts/2]
+mu_grid_m = [mu for mu in mu_grid if mu < 0]
 n_mu_pts_m = len(mu_grid_m)
 
 # negative angle points
-mu_grid_p = mu_grid[n_mu_pts/2 + 1:]
+mu_grid_p = [mu for mu in mu_grid if mu > 0]
 n_mu_pts_p = len(mu_grid_p)
 
 # optical depth grid
@@ -141,18 +140,20 @@ def Delta_I_p(i, j):
 def Delta_I_m(i, j):
     return (alpha_m(i, j) * source_fn(i-1) + beta_m(i, j) * source_fn(i) + gamma_m(i, j) * source_fn(i+1))
 
-def calc_formal_soln():
-    for i in range(n_tau_pts-1, 0, -1):
-        for j in range(n_mu_pts_p):
-            I_lam_p[i, j] = I_lam_p[i+1, j] * exp(-delta_tau(i, j)) + Delta_I_p(i, j)
-    for i in range(n_tau_pts):
-        for j in range(1, n_mu_pts_m):
-            I_lam_m[i, j] = I_lam_m[i-1, j] * exp(-delta_tau(i-1, j)) + Delta_I_m(i, j)
+def calc_formal_soln_p(I_lam_p, j):
+    for i in range(n_tau_pts-2, 0, -1):
+        I_lam_p[i, j] = I_lam_p[i+1, j] * exp(-delta_tau(i, j)) + Delta_I_p(i, j)
+        
+def calc_formal_soln_m(I_lam_m, j):
+    for i in range(2, n_tau_pts):
+        I_lam_m[i, j] = I_lam_m[i-1, j] * exp(-delta_tau(i-1, j)) + Delta_I_m(i, j)
 
 # <codecell>
 
-calc_formal_soln
-print(I_lam_p)
+for j in range(n_mu_pts_m):
+    calc_formal_soln_m(I_lam_m, j)
+for j in range(n_mu_pts_p):
+    calc_formal_soln_p(I_lam_p, j)
 
 # <codecell>
 
