@@ -3,68 +3,94 @@
 
 # <codecell>
 
-import numpy as np
+# number of angle points
+n_mu_pts = 10
+
+# number of physical grid depth points
+n_depth_pts = 10
 
 # <codecell>
 
-# number of angle points
-n_mu_pts = 50
+# source function, assumed to be isotropic (so no angle dependence)
+def source_fn(i):
+    return (planck_fn(1)) # TODO: fix this
 
-# number of optical depth points
-n_tau_pts = 10
+# Planck function
+def planck_fn(T):
+    return (1)
+
+# <codecell>
+
+import numpy as np
+import astropy.units as u
+
+# <codecell>
+
+# physical grid
+radial_grid = np.linspace(1, 10, n_depth_pts) * u.cm
+
+# opacity grid
+chi_grid = np.logspace(-7, 3, n_depth_pts) * (1/u.cm)
+
+# <codecell>
+
+from math import fabs, exp
+
+# <codecell>
+
+class ray:
+    def __init__(self, mu):
+        self.mu = mu
+        self.I_lam = np.zeros(n_depth_pts)
+        if mu > 0:
+            self.I_lam[0] = planck_fn(1)
+        else:
+            self.I_lam[0] = 0
+        self.tau_grid = np.zeros(n_depth_pts)
+    
+    def calc_tau(self):
+        self.tau_grid[0] = (0 * u.dimensionless_unscaled)
+        for i, depth in enumerate(radial_grid):
+            if i > 0:
+                self.tau_grid[i] = (self.tau_grid[i-1] + (0.5 * (chi_grid[i] + chi_grid[i-1]) * (radial_grid[i] - radial_grid[i-1]) / fabs(self.mu)))
+                
+    def Delta_tau(self, i):
+        return (self.tau_grid[i+1] - self.tau_grid[i])
+    
+    def alpha(self, i):
+        return (((1 - exp(-self.Delta_tau(i-1)))/self.Delta_tau(i-1))  - exp(-self.Delta_tau(i-1)))
+    def beta(self, i):
+        return (1 - (1 - exp(-self.Delta_tau(i-1)) / self.Delta_tau(i-1)))
+    def gamma(self, i):
+        return (0)
+    
+    def Delta_I(self, i):
+        return (self.alpha(i) * source_fn(i-1) + self.beta(i) * source_fn(i) + self.gamma(i) * source_fn(i+1))
+    
+    def formal_soln(self):
+        for i, depth in enumerate(self.tau_grid):
+            if i > 0:
+                self.I_lam[i] = self.I_lam[i-1] * exp(-self.Delta_tau(i-1)) + self.Delta_I(i)
 
 # <codecell>
 
 # angular grid
 mu_grid = np.linspace(-1, 1, n_mu_pts)
 
-# positive angle points
-mu_grid_m = [mu for mu in mu_grid if mu < 0]
-n_mu_pts_m = len(mu_grid_m)
-
-# negative angle points
-mu_grid_p = [mu for mu in mu_grid if mu > 0]
-n_mu_pts_p = len(mu_grid_p)
-
-# optical depth grid
-tau_grid = np.logspace(-7, 3, n_tau_pts)
+rays = []
+for mu in mu_grid:
+    rays.append(ray(mu))
 
 # <codecell>
 
-from math import fabs
-
-def delta_tau(i, j):
-    return ((tau_grid[i] - tau_grid[i-1]) / fabs(mu_grid[j]))
-
-# <codecell>
-
-# source function interpolation coefficent helpers
-from math import exp, pow
-
-def e0(tau_idx, mu_idx):
-    return (1 - exp(-delta_tau(tau_idx-1, mu_idx)))
-def e1(tau_idx, mu_idx):
-    return (delta_tau(tau_idx-1, mu_idx) - e0(tau_idx, mu_idx))
-def e2(tau_idx, mu_idx):
-    return (pow(delta_tau(tau_idx-1, mu_idx), 2) - 2*e1(tau_idx, mu_idx))
+for ray in rays:
+    ray.calc_tau()
+    ray.formal_soln()
 
 # <codecell>
 
-# source function interpolation coefficents (LINEAR)
-
-def alpha_m(tau_idx, mu_idx):
-    return (e0(tau_idx, mu_idx) - e1(tau_idx, mu_idx)/delta_tau(tau_idx-1, mu_idx))
-def beta_m(tau_idx, mu_idx):
-    return (e1(tau_idx, mu_idx) / delta_tau(tau_idx-1, mu_idx))
-def gamma_m(tau_idx, mu_idx):
-    return (0)
-
-def alpha_p(tau_idx, mu_idx):
-    return (0)
-def beta_p(tau_idx, mu_idx):
-    return (e1(tau_idx+1, mu_idx) / delta_tau(tau_idx, mu_idx))
-def gamma_p(tau_idx, mu_idx):
-    return (e0(tau_idx+1, mu_idx) - e1(tau_idx+1, mu_idx)/delta_tau(tau_idx, mu_idx))
+for ray in rays:
+    print(ray.I_lam)
 
 # <codecell>
 
@@ -107,53 +133,6 @@ for i in range(1, n_tau_pts-1):
     Lambda[i-1, i] = 0.25 * simps(i_hat_m_im1[i] + i_hat_m_ip1[i])
     Lambda[i  , i] = 0.25 * simps(i_hat_m_i  [i] + i_hat_m_i  [i])
     Lambda[i+1, i] = 0.25 * simps(i_hat_m_ip1[i] + i_hat_m_ip1[i])
-
-# <codecell>
-
-# source function, assumed to be isotropic (so no angle dependence)
-def source_fn(i):
-    return (planck_fn(1)) # TODO: fix this
-
-# Planck function
-def planck_fn(T):
-    return (1)
-
-# <codecell>
-
-# specific intensity
-I_lam_p = np.zeros([n_tau_pts, n_mu_pts_p])
-I_lam_m = np.zeros([n_tau_pts, n_mu_pts_m])
-
-# outward intensity at depth should be the diffusion condition (TODO: FIX THIS. RIGHT NOW IT'S JUST THE PLANCK FUNCTION)
-I_lam_p[n_tau_pts-1,:] = planck_fn(1)
-
-# inward intensity at the surface is zero
-I_lam_m[0,:] = 0
-
-# <codecell>
-
-# formal solution stuff
-
-def Delta_I_p(i, j):
-    return (alpha_p(i, j) * source_fn(i-1) + beta_p(i, j) * source_fn(i) + gamma_p(i, j) * source_fn(i+1))
-
-def Delta_I_m(i, j):
-    return (alpha_m(i, j) * source_fn(i-1) + beta_m(i, j) * source_fn(i) + gamma_m(i, j) * source_fn(i+1))
-
-def calc_formal_soln_p(I_lam_p, j):
-    for i in range(n_tau_pts-2, 0, -1):
-        I_lam_p[i, j] = I_lam_p[i+1, j] * exp(-delta_tau(i, j)) + Delta_I_p(i, j)
-        
-def calc_formal_soln_m(I_lam_m, j):
-    for i in range(2, n_tau_pts):
-        I_lam_m[i, j] = I_lam_m[i-1, j] * exp(-delta_tau(i-1, j)) + Delta_I_m(i, j)
-
-# <codecell>
-
-for j in range(n_mu_pts_m):
-    calc_formal_soln_m(I_lam_m, j)
-for j in range(n_mu_pts_p):
-    calc_formal_soln_p(I_lam_p, j)
 
 # <codecell>
 
