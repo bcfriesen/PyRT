@@ -89,50 +89,19 @@ for ray in rays:
 
 # <codecell>
 
-for ray in rays:
-    print(ray.I_lam)
-
-# <codecell>
-
 # build tri-diagonal component of Lambda matrix
-from scipy.integrate import simps
 
-i_hat_m_im1 = np.empty([n_tau_pts, n_mu_pts])
-i_hat_m_i   = np.empty([n_tau_pts, n_mu_pts])
-i_hat_m_ip1 = np.empty([n_tau_pts, n_mu_pts])
+# TODO: check boundary conditions (j = 0 and j = n_depth_points). Did I miss anything?
 
-i_hat_p_im1 = np.empty([n_tau_pts, n_mu_pts])
-i_hat_p_i   = np.empty([n_tau_pts, n_mu_pts])
-i_hat_p_ip1 = np.empty([n_tau_pts, n_mu_pts])
+Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
 
-Lambda = np.zeros([n_tau_pts, n_tau_pts])
-
-for i in range(1, n_tau_pts-1):
-    for j in range(n_mu_pts):
-        if (i == 1):
-            i_hat_m_im1[i, j] = 0
-            i_hat_m_i  [i, j] = 0
-            i_hat_m_ip1[i, j] = 0
-        else:
-            i_hat_m_im1[i, j] =  gamma_m(i-1, j)
-            i_hat_m_i  [i, j] =  gamma_m(i-1, j) * exp(-delta_tau(i-1, j)) + beta_m(i, j)
-            i_hat_m_ip1[i, j] = (gamma_m(i-1, j) * exp(-delta_tau(i-1, j)) + beta_m(i, j)) * exp(-delta_tau(i, j)) + alpha_m(i+1, j)
-
-for i in range(1, n_tau_pts-1):
-    for j in range(n_mu_pts):
-        if (i == n_tau_pts-1):
-            i_hat_p_ip1[i, j] = 0
-            i_hat_p_i  [i, j] = 0
-            i_hat_p_im1[i, j] = 0
-        else:
-            i_hat_p_ip1[i, j] =  alpha_p(i+1, j)
-            i_hat_p_i  [i, j] =  alpha_p(i+1, j) * exp(-delta_tau(i, j)) + beta_p(i, j)
-            i_hat_p_im1[i, j] = (alpha_p(i+1, j) * exp(-delta_tau(i, j)) + beta_p(i, j)) * exp(-delta_tau(i, j)) + gamma_p(i+1, j)
-
-for i in range(1, n_tau_pts-1):
-    Lambda[i-1, i] = 0.25 * simps(i_hat_m_im1[i] + i_hat_m_ip1[i])
-    Lambda[i  , i] = 0.25 * simps(i_hat_m_i  [i] + i_hat_m_i  [i])
-    Lambda[i+1, i] = 0.25 * simps(i_hat_m_ip1[i] + i_hat_m_ip1[i])
+for j, ray in enumerate(rays):
+    if j > 0:
+        Lambda_star[j-1, j] = ray.gamma(j-1)
+    if j < n_depth_pts-2:
+        Lambda_star[j+1, j] = Lambda_star[  j, j] * exp(-(ray.Delta_tau(j+1))) + ray.alpha(j+1)
+    if j > 0 and j < n_depth_pts-2:
+        Lambda_star[  j, j] = Lambda_star[j-1, j] * exp(-(ray.Delta_tau(j))) + ray.beta(j)
 
 # <codecell>
 
