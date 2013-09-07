@@ -87,8 +87,6 @@ def get_ray_index_for_grid_point(ray, grid_idx):
     else:
         return (n_depth_pts - (grid_idx + 1))
 
-from numpy import matrix
-
 # build tri-diagonal component of Lambda matrix
 
 # TODO: check boundary conditions (j = 0 and j = n_depth_points). Did I miss anything?
