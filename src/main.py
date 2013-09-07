@@ -11,17 +11,20 @@ n_depth_pts = 10
 
 # <codecell>
 
-# source function, assumed to be isotropic (so no angle dependence)
-def source_fn(i):
-    return (planck_fn(1)) # TODO: make this something like epsilon * B + (1 - epsilon) * J
+import numpy as np
+
+# <codecell>
 
 # Planck function
 def planck_fn(T):
     return (1)
 
+# source function, assumed to be isotropic (so no angle dependence)
+source_fn = np.zeros(n_depth_pts)
+source_fn[:] = planck_fn(1) # TODO: make this something like epsilon * B + (1 - epsilon) * J
+
 # <codecell>
 
-import numpy as np
 import astropy.units as u
 
 # <codecell>
@@ -70,13 +73,15 @@ class ray:
     
     # more source function interpolation stuff (see my Eq. 10 for definition of Delta_I)
     def Delta_I(self, i):
-        return (self.alpha(i) * source_fn(i-1) + self.beta(i) * source_fn(i) + self.gamma(i) * source_fn(i+1))
+        if i < n_depth_pts-1:
+            return (self.alpha(i) * source_fn[i-1] + self.beta(i) * source_fn[i] + self.gamma(i) * source_fn[i+1])
+        elif i == n_depth_pts-1:
+            return (self.alpha(i) * source_fn[i-1] + self.beta(i) * source_fn[i])
     
     # perform a formal solution along the ray to get new I
     def formal_soln(self):
-        for i, depth in enumerate(self.tau_grid):
-            if i > 0:
-                self.I_lam[i] = self.I_lam[i-1] * exp(-self.Delta_tau(i-1)) + self.Delta_I(i)
+        for i in range(1, n_depth_pts):
+            self.I_lam[i] = self.I_lam[i-1] * exp(-self.Delta_tau(i-1)) + self.Delta_I(i)
 
 # <codecell>
 
@@ -160,11 +165,6 @@ for j, ray in enumerate(rays):
     inorm_im1[j] =  ray.gamma(ray_idx_lm1)
     
     Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid) 
-
-# <codecell>
-
-# need to convert to a numpy matrix to do things like find the inverse, etc.
-Lambda_star = np.asmatrix(Lambda_star)
 
 # <codecell>
 
