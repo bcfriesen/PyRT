@@ -50,7 +50,7 @@ class ray:
     def alpha(self, i):
         return (((1 - exp(-self.Delta_tau(i-1)))/self.Delta_tau(i-1))  - exp(-self.Delta_tau(i-1)))
     def beta(self, i):
-        return (1 - (1 - exp(-self.Delta_tau(i-1)) / self.Delta_tau(i-1)))
+        return (1 - ((1 - exp(-self.Delta_tau(i-1))) / self.Delta_tau(i-1)))
     def gamma(self, i):
         return (0)
 
