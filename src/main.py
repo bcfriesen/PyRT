@@ -113,8 +113,16 @@ for l in range(1, n_depth_pts-2):
 
 # boundary cases.
 
-# the l = 0 boundary case I think is just all zeros so skip it
-# TODO: check that the above statement is correct
+# TODO: check that this is right. there are some index overflows that I just
+# manually set to zero to avoid errors, but I have no idea if this is right
+
+l = 0
+for j, ray in enumerate(rays):
+    ray_idx_lp1 = get_ray_index_for_grid_point(ray, l+1)
+
+    inorm_ip1[j] = ray.alpha(ray_idx_lp1)
+
+Lambda_star[l, l+1] = 0.5 * simps(inorm_ip1, mu_grid)
 
 l = n_depth_pts-2
 for j, ray in enumerate(rays):
