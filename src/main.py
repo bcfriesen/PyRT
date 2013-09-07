@@ -135,6 +135,10 @@ for j, ray in enumerate(rays):
 Lambda_star[l, l-1] = 0.5 * simps(inorm_im1, mu_grid)
 Lambda_star[l, l  ] = 0.5 * simps(inorm_i  , mu_grid)
 
+# FIXME: only the l-1 element can fit in the last row of Lambda_star without
+# index overflows, but gamma is always 0 with linear interpolation, which means
+# the last row of Lambda_star is always filled with zeros, which means the
+# matrix is automatically singular. How do we fix this??
 l = n_depth_pts-1
 for j, ray in enumerate(rays):
     ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
