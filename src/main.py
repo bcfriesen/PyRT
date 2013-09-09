@@ -107,9 +107,9 @@ for l in range(1, n_depth_pts-2):
         inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.beta(ray_idx_l)
         inorm_ip1[j] = (ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.beta(ray_idx_l)) * exp(-ray.Delta_tau(ray_idx_lp1)) + ray.alpha(ray_idx_lp1)
 
-    Lambda_star[l, l-1] = 0.5 * simps(inorm_im1, mu_grid)
-    Lambda_star[l, l  ] = 0.5 * simps(inorm_i  , mu_grid)
-    Lambda_star[l, l+1] = 0.5 * simps(inorm_ip1, mu_grid)
+    Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
+    Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
+    Lambda_star[l+1, l] = 0.5 * simps(inorm_ip1, mu_grid)
 
 # boundary cases.
 
@@ -122,7 +122,7 @@ for j, ray in enumerate(rays):
 
     inorm_ip1[j] = ray.alpha(ray_idx_lp1)
 
-Lambda_star[l, l+1] = 0.5 * simps(inorm_ip1, mu_grid)
+Lambda_star[l+1, l] = 0.5 * simps(inorm_ip1, mu_grid)
 
 l = n_depth_pts-2
 for j, ray in enumerate(rays):
@@ -132,8 +132,8 @@ for j, ray in enumerate(rays):
     inorm_im1[j] =  ray.gamma(ray_idx_lm1)
     inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.beta(ray_idx_l)
 
-Lambda_star[l, l-1] = 0.5 * simps(inorm_im1, mu_grid)
-Lambda_star[l, l  ] = 0.5 * simps(inorm_i  , mu_grid)
+Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
+Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
 
 # FIXME: only the l-1 element can fit in the last row of Lambda_star without
 # index overflows, but gamma is always 0 with linear interpolation, which means
@@ -145,4 +145,4 @@ for j, ray in enumerate(rays):
 
     inorm_im1[j] =  ray.gamma(ray_idx_lm1)
 
-Lambda_star[l, l-1] = 0.5 * simps(inorm_im1, mu_grid)
+Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
