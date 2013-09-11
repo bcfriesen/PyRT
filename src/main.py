@@ -48,9 +48,9 @@ class ray:
 
     # coefficients for source function interpolation
     def alpha(self, i):
-        return (((1 - exp(-self.Delta_tau(i-1)))/self.Delta_tau(i-1))  - exp(-self.Delta_tau(i-1)))
+        return (1 - exp(-self.Delta_tau(i-1)) - ((self.Delta_tau(i-1) - 1 + exp(-self.Delta_tau(i-1)))/self.Delta_tau(i-1)))
     def beta(self, i):
-        return (1 - ((1 - exp(-self.Delta_tau(i-1))) / self.Delta_tau(i-1)))
+        return ((self.Delta_tau(i-1) - 1 + exp(-self.Delta_tau(i-1))) / self.Delta_tau(i-1))
     def gamma(self, i):
         return (0)
 
@@ -97,15 +97,15 @@ inorm_im1 = np.zeros(n_mu_pts)
 inorm_i   = np.zeros(n_mu_pts)
 inorm_ip1 = np.zeros(n_mu_pts)
 
-for l in range(1, n_depth_pts-2):
+for l in range(2, n_depth_pts-2):
     for j, ray in enumerate(rays):
         ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
         ray_idx_l   = get_ray_index_for_grid_point(ray, l  )
         ray_idx_lp1 = get_ray_index_for_grid_point(ray, l+1)
 
         inorm_im1[j] =  ray.gamma(ray_idx_lm1)
-        inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.beta(ray_idx_l)
-        inorm_ip1[j] = (ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.beta(ray_idx_l)) * exp(-ray.Delta_tau(ray_idx_lp1)) + ray.alpha(ray_idx_lp1)
+        inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
+        inorm_ip1[j] = (ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)) * exp(-ray.Delta_tau(ray_idx_l)) + ray.alpha(ray_idx_lp1)
 
     Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
     Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
@@ -116,33 +116,32 @@ for l in range(1, n_depth_pts-2):
 # TODO: check that this is right. there are some index overflows that I just
 # manually set to zero to avoid errors, but I have no idea if this is right
 
+# This is from Eddie's notes.
 l = 0
 for j, ray in enumerate(rays):
     ray_idx_lp1 = get_ray_index_for_grid_point(ray, l+1)
+    inorm_i[j] = ray.beta(ray_idx_lp1)
+Lambda_star[l, l] = 0.5 * simps(inorm_i, mu_grid)
 
-    inorm_ip1[j] = ray.alpha(ray_idx_lp1)
-
-Lambda_star[l+1, l] = 0.5 * simps(inorm_ip1, mu_grid)
+l = 1
+for j, ray in enumerate(rays):
+    ray_idx_l = get_ray_index_for_grid_point(ray, l)
+    inorm_i[j] = ray.beta(ray_idx_l)
+Lambda_star[l, l] = 0.5 * simps(inorm_i, mu_grid)
 
 l = n_depth_pts-2
 for j, ray in enumerate(rays):
     ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
     ray_idx_l   = get_ray_index_for_grid_point(ray, l  )
-
     inorm_im1[j] =  ray.gamma(ray_idx_lm1)
-    inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.beta(ray_idx_l)
-
+    inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
 Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
 Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
 
-# FIXME: only the l-1 element can fit in the last row of Lambda_star without
-# index overflows, but gamma is always 0 with linear interpolation, which means
-# the last row of Lambda_star is always filled with zeros, which means the
-# matrix is automatically singular. How do we fix this??
 l = n_depth_pts-1
 for j, ray in enumerate(rays):
     ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
-
     inorm_im1[j] =  ray.gamma(ray_idx_lm1)
-
+    inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
 Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
+Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
