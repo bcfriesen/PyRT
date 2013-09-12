@@ -109,15 +109,13 @@ inorm_im1 = np.zeros(n_mu_pts)
 inorm_i   = np.zeros(n_mu_pts)
 inorm_ip1 = np.zeros(n_mu_pts)
 
-for l in range(2, n_depth_pts-2):
+for l in range(1, n_depth_pts-2):
     for j, ray in enumerate(rays):
-        ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
-        ray_idx_l   = get_ray_index_for_grid_point(ray, l  )
-        ray_idx_lp1 = get_ray_index_for_grid_point(ray, l+1)
+        ray_idx_l   = get_ray_index_for_grid_point(ray, l)
 
-        inorm_im1[j] =  ray.gamma(ray_idx_lm1)
-        inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
-        inorm_ip1[j] = (ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)) * exp(-ray.Delta_tau(ray_idx_l)) + ray.alpha(ray_idx_lp1)
+        inorm_im1[j] =  ray.gamma(ray_idx_l-1)
+        inorm_i  [j] =  ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
+        inorm_ip1[j] = (ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)) * exp(-ray.Delta_tau(ray_idx_l)) + ray.alpha(ray_idx_l+1)
 
     Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
     Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
@@ -135,39 +133,41 @@ for j, ray in enumerate(rays):
     inorm_i[j] = ray.beta(ray_idx_lp1)
 Lambda_star[l, l] = 0.5 * simps(inorm_i, mu_grid)
 
-l = 1
-for j, ray in enumerate(rays):
-    ray_idx_l = get_ray_index_for_grid_point(ray, l)
-    inorm_i[j] = ray.beta(ray_idx_l)
-Lambda_star[l, l] = 0.5 * simps(inorm_i, mu_grid)
-
-l = n_depth_pts-2
-for j, ray in enumerate(rays):
-    ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
-    ray_idx_l   = get_ray_index_for_grid_point(ray, l  )
-    inorm_im1[j] =  ray.gamma(ray_idx_lm1)
-    inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
-Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
-Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
-
 l = n_depth_pts-1
 for j, ray in enumerate(rays):
-    ray_idx_lm1 = get_ray_index_for_grid_point(ray, l-1)
-    inorm_im1[j] =  ray.gamma(ray_idx_lm1)
-    inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
+    ray_idx_l   = get_ray_index_for_grid_point(ray, l)
+    inorm_im1[j] =  ray.gamma(ray_idx_l-1)
+    # FIXME: at depth, we don't have an "i-1" term on rays with mu > 0 because they start at depth
+    if (ray.mu < 0):
+        inorm_i  [j] =  ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
 Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
 Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
 
+print (Lambda_star)
+
 # mean intensity
-J_lam = np.empty(n_depth_pts)
 
 # calculate mean intensity
-def calc_J(J_lam, rays):
+def calc_J(rays):
     I_mu = np.empty(n_mu_pts)
+    J_lam = np.empty(n_depth_pts)
     for i in range(n_depth_pts):
         for j, ray in enumerate(rays):
             I_mu[j] = ray.I_lam[i]
         J_lam[i] = simps(I_mu, mu_grid)
     return (J_lam)
 
-J_lam = calc_J(J_lam, rays)
+J_n   = np.empty(n_depth_pts)
+J_np1 = np.empty(n_depth_pts)
+J_fs  = np.empty(n_depth_pts)
+
+# initial "guess" for J
+J_n [:]  = 1
+# J from formal solution (calculated earlier)
+J_fs[:] = calc_J(rays)
+
+epsilon = 1.0e-4
+
+for i in range(10):
+    J_np1 = J_n + np.dot(np.linalg.inv(1 - (1 - epsilon)*Lambda_star), (J_fs - J_n))
+    J_n = J_np1
