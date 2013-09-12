@@ -126,20 +126,26 @@ for l in range(1, n_depth_pts-2):
 # TODO: check that this is right. there are some index overflows that I just
 # manually set to zero to avoid errors, but I have no idea if this is right
 
-# This is from Eddie's notes.
 l = 0
 for j, ray in enumerate(rays):
-    ray_idx_lp1 = get_ray_index_for_grid_point(ray, l+1)
-    inorm_i[j] = ray.beta(ray_idx_lp1)
-Lambda_star[l, l] = 0.5 * simps(inorm_i, mu_grid)
+    # at the surface we don't have an "i-1" term on rays with mu < 0 because they start at the surface
+    if ray.mu > 0:
+        ray_idx_l = get_ray_index_for_grid_point(ray, l)
+        # TODO: some of these indices overflowed past the edge and I removed
+        # them by hand. No idea if this is right. It's suspicious that two
+        # matrix elements are identical...
+        inorm_i  [j] = ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
+        inorm_ip1[j] = ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
+Lambda_star[l,   l] = 0.5 * simps(inorm_i  , mu_grid)
+Lambda_star[l+1, l] = 0.5 * simps(inorm_ip1, mu_grid)
 
 l = n_depth_pts-1
 for j, ray in enumerate(rays):
-    ray_idx_l   = get_ray_index_for_grid_point(ray, l)
-    inorm_im1[j] =  ray.gamma(ray_idx_l-1)
-    # FIXME: at depth, we don't have an "i-1" term on rays with mu > 0 because they start at depth
+    # at depth, we don't have an "i-1" term on rays with mu > 0 because they start at depth
     if (ray.mu < 0):
-        inorm_i  [j] =  ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
+        ray_idx_l    = get_ray_index_for_grid_point(ray, l)
+        inorm_im1[j] = ray.gamma(ray_idx_l-1)
+        inorm_i  [j] = ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
 Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
 Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
 
