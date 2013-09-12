@@ -126,6 +126,9 @@ for l in range(1, n_depth_pts-2):
 # TODO: check that this is right. there are some index overflows that I just
 # manually set to zero to avoid errors, but I have no idea if this is right
 
+inorm_im1[:] = 0
+inorm_i  [:] = 0
+inorm_ip1[:] = 0
 l = 0
 for j, ray in enumerate(rays):
     # at the surface we don't have an "i-1" term on rays with mu < 0 because they start at the surface
@@ -139,6 +142,9 @@ for j, ray in enumerate(rays):
 Lambda_star[l,   l] = 0.5 * simps(inorm_i  , mu_grid)
 Lambda_star[l+1, l] = 0.5 * simps(inorm_ip1, mu_grid)
 
+inorm_im1[:] = 0
+inorm_i  [:] = 0
+inorm_ip1[:] = 0
 l = n_depth_pts-1
 for j, ray in enumerate(rays):
     # at depth, we don't have an "i-1" term on rays with mu > 0 because they start at depth
