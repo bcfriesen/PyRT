@@ -22,6 +22,12 @@ radial_grid = np.linspace(1, 10, n_depth_pts) * u.cm
 # opacity grid
 chi_grid = np.logspace(-7, 3, n_depth_pts) * (1/u.cm)
 
+def get_grid_index_for_ray_point(ray, ray_idx):
+    if ray.mu < 0:
+        return (ray_idx)
+    else:
+        return (n_depth_pts - ray_idx - 1)
+
 from math import fabs, exp
 
 class ray:
@@ -29,7 +35,7 @@ class ray:
         self.mu = mu
         self.I_lam = np.zeros(n_depth_pts)
         # outward pointing rays should have diffusion as their initial condition
-        if mu > 0:
+        if self.mu > 0:
             self.I_lam[0] = planck_fn(1) # TODO: make this the diffusion condition
         # our object is not illuminated from some other source so inward pointing rays have zero intensity to start
         else:
@@ -41,7 +47,9 @@ class ray:
         self.tau_grid[0] = (0 * u.dimensionless_unscaled)
         for i, depth in enumerate(radial_grid):
             if i > 0:
-                self.tau_grid[i] = (self.tau_grid[i-1] + (0.5 * (chi_grid[i] + chi_grid[i-1]) * (radial_grid[i] - radial_grid[i-1]) / fabs(self.mu)))
+                grid_idx_im1 = get_grid_index_for_ray_point(self, i-1)
+                grid_idx_i   = get_grid_index_for_ray_point(self, i  )
+                self.tau_grid[i] = (self.tau_grid[i-1] + (0.5 * (chi_grid[grid_idx_im1] + chi_grid[grid_idx_i]) * fabs(radial_grid[grid_idx_i] - radial_grid[grid_idx_im1]) / fabs(self.mu)))
 
     def Delta_tau(self, i):
         return (self.tau_grid[i+1] - self.tau_grid[i])
@@ -56,10 +64,13 @@ class ray:
 
     # more source function interpolation stuff (see my Eq. 10 for definition of Delta_I)
     def Delta_I(self, i):
+        grid_idx_im1 = get_grid_index_for_ray_point(self, i-1)
+        grid_idx_i   = get_grid_index_for_ray_point(self, i  )
+        grid_idx_ip1 = get_grid_index_for_ray_point(self, i+1)
         if i < n_depth_pts-1:
-            return (self.alpha(i) * source_fn[i-1] + self.beta(i) * source_fn[i] + self.gamma(i) * source_fn[i+1])
+            return (self.alpha(i) * source_fn[grid_idx_im1] + self.beta(i) * source_fn[grid_idx_i] + self.gamma(i) * source_fn[grid_idx_ip1])
         elif i == n_depth_pts-1:
-            return (self.alpha(i) * source_fn[i-1] + self.beta(i) * source_fn[i])
+            return (self.alpha(i) * source_fn[grid_idx_im1] + self.beta(i) * source_fn[grid_idx_i])
 
     # perform a formal solution along the ray to get new I
     def formal_soln(self):
@@ -86,6 +97,7 @@ def get_ray_index_for_grid_point(ray, grid_idx):
         return (grid_idx)
     else:
         return (n_depth_pts - (grid_idx + 1))
+
 
 # build tri-diagonal component of Lambda matrix
 
@@ -145,3 +157,17 @@ for j, ray in enumerate(rays):
     inorm_i  [j] =  ray.gamma(ray_idx_lm1) * exp(-ray.Delta_tau(ray_idx_lm1)) + ray.beta(ray_idx_l)
 Lambda_star[l-1, l] = 0.5 * simps(inorm_im1, mu_grid)
 Lambda_star[l  , l] = 0.5 * simps(inorm_i  , mu_grid)
+
+# mean intensity
+J_lam = np.empty(n_depth_pts)
+
+# calculate mean intensity
+def calc_J(J_lam, rays):
+    I_mu = np.empty(n_mu_pts)
+    for i in range(n_depth_pts):
+        for j, ray in enumerate(rays):
+            I_mu[j] = ray.I_lam[i]
+        J_lam[i] = simps(I_mu, mu_grid)
+    return (J_lam)
+
+J_lam = calc_J(J_lam, rays)
