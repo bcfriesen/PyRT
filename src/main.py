@@ -7,6 +7,7 @@ n_depth_pts = 10
 import numpy as np
 
 # Planck function
+# TODO: make this actually the Planck function
 def planck_fn(T):
     return (1)
 
