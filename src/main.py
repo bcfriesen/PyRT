@@ -24,6 +24,7 @@ radial_grid = np.linspace(1, 10, n_depth_pts) * u.cm
 chi_grid = np.logspace(-7, 3, n_depth_pts) * (1/u.cm)
 
 def get_grid_index_for_ray_point(ray, ray_idx):
+    """Given a ray and a particular point along that ray, return the corresponding grid point index."""
     if ray.mu < 0:
         return (ray_idx)
     else:
