@@ -29,6 +29,14 @@ def get_grid_index_for_ray_point(ray, ray_idx):
     else:
         return (n_depth_pts - ray_idx - 1)
 
+def get_ray_index_for_grid_point(ray, grid_idx):
+    """Given a ray and a particular point on the physical grid, return the index along that ray corresponding to that point."""
+    if ray.mu < 0:
+        return (grid_idx)
+    else:
+        return (n_depth_pts - (grid_idx + 1))
+
+
 from math import fabs, exp
 
 class ray:
@@ -91,14 +99,6 @@ for ray in rays:
     ray.formal_soln()
 
 from scipy.integrate import simps
-
-def get_ray_index_for_grid_point(ray, grid_idx):
-    """Given a ray and a particular point on the physical grid, return the index along that ray corresponding to that point."""
-    if ray.mu < 0:
-        return (grid_idx)
-    else:
-        return (n_depth_pts - (grid_idx + 1))
-
 
 # build tri-diagonal component of Lambda matrix
 
