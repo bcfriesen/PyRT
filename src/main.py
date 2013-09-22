@@ -174,8 +174,6 @@ for j, ray in enumerate(rays):
 Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[grid_idx_lim1, :], mu_grid)
 Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l,             :], mu_grid)
 
-print (Lambda_star)
-
 # mean intensity
 
 # calculate mean intensity
@@ -200,6 +198,5 @@ J_fs[:] = calc_J(rays)
 epsilon = 1.0e-4
 
 for i in range(10):
-    J_np1 = J_n + np.dot(np.linalg.inv(1 - (1 - epsilon)*Lambda_star), (J_fs - J_n))
+    J_np1 = np.linalg.solve(1 - Lambda_star * (1 - epsilon), J_fs - np.dot(Lambda_star, (1 - epsilon) * J_n))
     J_n = J_np1
-    print(J_n)
