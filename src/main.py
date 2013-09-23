@@ -2,7 +2,7 @@
 n_mu_pts = 10
 
 # number of physical grid depth points
-n_depth_pts = 10
+n_depth_pts = 100
 
 import numpy as np
 
@@ -109,8 +109,10 @@ inorm_tmp = np.zeros([n_depth_pts, n_mu_pts])
 
 for l in range(1, n_depth_pts-2):
     for j, ray in enumerate(rays):
+        # get ray index corresponding to physical grid index l
         ray_idx_l   = get_ray_index_for_grid_point(ray, l)
 
+        # get physical grid indices corresponding to i+1 and i-1 along the ray
         grid_idx_lim1 = get_grid_index_for_ray_point(ray, ray_idx_l-1)
         grid_idx_lip1 = get_grid_index_for_ray_point(ray, ray_idx_l+1)
 
@@ -118,31 +120,32 @@ for l in range(1, n_depth_pts-2):
         inorm_tmp[l]                =  ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
         inorm_tmp[grid_idx_lip1, j] = (ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)) * exp(-ray.Delta_tau(ray_idx_l)) + ray.alpha(ray_idx_l+1)
 
-    # TODO: these are hard-coded, works in 1-D plane parallel, but won't work in more complex geometries
+    # TODO: these +1/-1 offsets are hard-coded, works in 1-D plane parallel,
+    # but won't work in more complex geometries
     Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[grid_idx_lim1, :], mu_grid)
     Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l,             :], mu_grid)
     Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[grid_idx_lip1, :], mu_grid)
 
 # boundary cases.
 
-inorm_tmp[:, :] = 0
-
 # surface
 l = 0
+inorm_tmp[:, :] = 0
 for j, ray in enumerate(rays):
-    # at the surface we don't have an "i-1" term on rays with mu < 0 because they start at the surface
+    # at the surface, outgoing rays (those with mu > 0) only have i-1 and i components, no i+1
     if ray.mu > 0:
         ray_idx_l = get_ray_index_for_grid_point(ray, l)
 
-        grid_idx_im1 = get_grid_index_for_ray_point(ray, ray_idx_l-1)
+        grid_idx_lim1 = get_grid_index_for_ray_point(ray, ray_idx_l-1)
 
         inorm_tmp[grid_idx_lim1, j] = ray.gamma(ray_idx_l-1)
         inorm_tmp[l,             j] = ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
     else:
-        # no illumination from the surface
+        # at the surface we don't have an "i-1" term on incoming rays (those with mu < 0)
+        # no illumination from the surface, so incoming rays at the surface have I(surface) = 0
         ray_idx_l = get_ray_index_for_grid_point(ray, l)
 
-        grid_idx_ip1 = get_grid_index_for_ray_point(ray, ray_idx_l+1)
+        grid_idx_lip1 = get_grid_index_for_ray_point(ray, ray_idx_l+1)
 
         inorm_tmp[l,             j] = 0
         inorm_tmp[grid_idx_lip1, j] = ray.alpha(ray_idx_l+1)
@@ -159,14 +162,14 @@ for j, ray in enumerate(rays):
     if (ray.mu < 0):
         ray_idx_l    = get_ray_index_for_grid_point(ray, l)
 
-        grid_idx_im1 = get_grid_index_for_ray_point(ray, ray_idx_l-1)
+        grid_idx_lim1 = get_grid_index_for_ray_point(ray, ray_idx_l-1)
 
         inorm_tmp[grid_idx_lim1, j] = ray.gamma(ray_idx_l-1)
         inorm_tmp[l,             j] = ray.gamma(ray_idx_l-1) * exp(-ray.Delta_tau(ray_idx_l-1)) + ray.beta(ray_idx_l)
     else:
         ray_idx_l    = get_ray_index_for_grid_point(ray, l)
 
-        grid_idx_ip1 = get_grid_index_for_ray_point(ray, ray_idx_l+1)
+        grid_idx_lip1 = get_grid_index_for_ray_point(ray, ray_idx_l+1)
 
         inorm_tmp[l,             j] = planck_fn(1)
         inorm_tmp[grid_idx_lip1, j] = planck_fn(1) * exp(-ray.Delta_tau(ray_idx_l)) + ray.alpha(ray_idx_l+1)
@@ -197,6 +200,14 @@ J_fs[:] = calc_J(rays)
 
 epsilon = 1.0e-4
 
+import matplotlib.pyplot as plt
+fig = plt.figure()
+ax = fig.add_subplot(111)
 for i in range(10):
     J_np1 = np.linalg.solve(1 - Lambda_star * (1 - epsilon), J_fs - np.dot(Lambda_star, (1 - epsilon) * J_n))
     J_n = J_np1
+    ax.plot(radial_grid, J_n)
+print(J_n)
+ax.set_xscale('log')
+ax.set_yscale('log')
+fig.savefig('derp.png')
