@@ -203,6 +203,8 @@ epsilon = 1.0e-4
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
+ax.plot(radial_grid, J_n)
+ax.plot(radial_grid, J_fs)
 for i in range(10):
     J_np1 = np.linalg.solve(1 - Lambda_star * (1 - epsilon), J_fs - np.dot(Lambda_star, (1 - epsilon) * J_n))
     J_n = J_np1
