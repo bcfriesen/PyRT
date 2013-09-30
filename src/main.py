@@ -15,7 +15,7 @@ def planck_fn(T):
 epsilon = 1.0e-4
 
 # mean intensity
-J_n   = np.empty(n_depth_pts)
+J_n   = np.zeros(n_depth_pts)
 # initial "guess" for J
 J_n[:]  = 2
 
@@ -202,8 +202,8 @@ def calc_J(rays):
         J_lam[i] = 0.5 * simps(I_mu, mu_grid)
     return (J_lam)
 
-J_np1 = np.empty(n_depth_pts)
-J_fs  = np.empty(n_depth_pts)
+J_np1 = np.zeros(n_depth_pts)
+J_fs  = np.zeros(n_depth_pts)
 
 # J from formal solution (calculated earlier)
 J_fs[:] = calc_J(rays)
