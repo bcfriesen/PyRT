@@ -194,11 +194,11 @@ Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l,             :], mu_grid)
 
 # calculate mean intensity
 def calc_J(rays):
-    I_mu = np.empty(n_mu_pts)
-    J_lam = np.empty(n_depth_pts)
+    I_mu = np.zeros(n_mu_pts)
+    J_lam = np.zeros(n_depth_pts)
     for i in range(n_depth_pts):
         for j, ray in enumerate(rays):
-            I_mu[j] = ray.I_lam[i]
+            I_mu[j] = ray.I_lam[get_ray_index_for_grid_point(ray, j)]
         J_lam[i] = 0.5 * simps(I_mu, mu_grid)
     return (J_lam)
 
