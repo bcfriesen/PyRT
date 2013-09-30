@@ -11,9 +11,22 @@ import numpy as np
 def planck_fn(T):
     return (1)
 
+# thermalization parameter. 1 = LTE; 0 = pure scattering
+epsilon = 1.0e-4
+
+# mean intensity
+J_n   = np.empty(n_depth_pts)
+# initial "guess" for J
+J_n[:]  = 2
+
 # source function, assumed to be isotropic (so no angle dependence)
 source_fn = np.zeros(n_depth_pts)
-source_fn[:] = planck_fn(1) # TODO: make this something like epsilon * B + (1 - epsilon) * J
+
+def calc_source_fn():
+    source_fn[:] = epsilon * planck_fn(1) + (1 - epsilon) * J_n[:]
+    print("Source function: ", source_fn)
+
+calc_source_fn()
 
 import astropy.units as u
 
@@ -189,16 +202,11 @@ def calc_J(rays):
         J_lam[i] = 0.5 * simps(I_mu, mu_grid)
     return (J_lam)
 
-J_n   = np.empty(n_depth_pts)
 J_np1 = np.empty(n_depth_pts)
 J_fs  = np.empty(n_depth_pts)
 
-# initial "guess" for J
-J_n [:]  = 1
 # J from formal solution (calculated earlier)
 J_fs[:] = calc_J(rays)
-
-epsilon = 1.0e-4
 
 import matplotlib.pyplot as plt
 fig = plt.figure()
@@ -208,8 +216,12 @@ ax.plot(radial_grid, J_fs)
 for i in range(10):
     J_np1 = np.linalg.solve(1 - Lambda_star * (1 - epsilon), J_fs - np.dot(Lambda_star, (1 - epsilon) * J_n))
     J_n = J_np1
+    calc_source_fn()
+    for ray in rays:
+        ray.formal_soln()
+    J_fs = calc_J(rays)
     ax.plot(radial_grid, J_n)
-print(J_n)
+    print("Mean intensity:", J_n)
 ax.set_xscale('log')
 ax.set_yscale('log')
 fig.savefig('derp.png')
