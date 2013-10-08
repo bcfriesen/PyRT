@@ -38,7 +38,6 @@ for mu in mu_grid:
 for each_ray in rays:
     each_ray.calc_tau(n_depth_pts, radial_grid, chi_grid)
     each_ray.formal_soln(n_depth_pts, source_fn)
-    print(each_ray.mu, each_ray.I_lam)
 
 # build tri-diagonal component of Lambda matrix
 Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
