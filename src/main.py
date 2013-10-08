@@ -53,7 +53,6 @@ from moments import calc_J
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(radial_grid, J_n)
 ax.plot(radial_grid, J_fs)
 for i in range(10):
     for each_ray in rays:
