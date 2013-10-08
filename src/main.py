@@ -49,17 +49,18 @@ Lambda_star = calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid
 J_fs  = np.zeros(n_depth_pts)
 
 from moments import calc_J
-
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(radial_grid, J_fs)
 for i in range(10):
+    J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
+    J_np1 = np.linalg.solve(1.0 - Lambda_star * (1.0 - epsilon), J_fs - np.dot(Lambda_star, (1 - epsilon) * J_n))
+    source_fn = calc_source_fn(source_fn, epsilon, J_np1)
     for each_ray in rays:
         each_ray.formal_soln(n_depth_pts, source_fn)
     J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    ax.plot(chi_grid, J_fs)
-    source_fn = calc_source_fn(source_fn, epsilon, J_fs)
+    ax.plot(chi_grid, J_np1)
+    J_n = J_np1
 ax.set_xscale('log')
 ax.set_yscale('log')
 fig.savefig('derp.png')
