@@ -75,3 +75,5 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
 
     Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[grid_idx_lim1, :], mu_grid)
     Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l,             :], mu_grid)
+
+    return(Lambda_star)
