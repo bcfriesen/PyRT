@@ -1,5 +1,5 @@
 import numpy as np
-from grid_functions import *
+from grid_functions import get_ray_index_for_grid_point
 from scipy.integrate import simps
 
 # calculate mean intensity
