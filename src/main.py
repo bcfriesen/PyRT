@@ -52,9 +52,11 @@ from moments import calc_J
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
+Delta_J = np.zeros([n_depth_pts])
 for i in range(10):
     J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    J_np1 = J_n + np.dot(np.linalg.inv(1 - (1 - epsilon) * Lambda_star), J_fs - J_n)
+    Delta_J = np.linalg.solve(1 - (1 - epsilon) * Lambda_star, J_fs - J_n)
+    J_np1 = J_n + Delta_J
     source_fn = calc_source_fn(source_fn, epsilon, J_np1)
     for each_ray in rays:
         each_ray.formal_soln(n_depth_pts, source_fn)
