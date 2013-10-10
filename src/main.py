@@ -54,7 +54,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 for i in range(10):
     J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    J_np1 = np.linalg.solve(1.0 - Lambda_star * (1.0 - epsilon), J_fs - np.dot(Lambda_star, (1 - epsilon) * J_n))
+    J_np1 = J_n + np.dot(np.linalg.inv(1 - (1 - epsilon) * Lambda_star), J_fs - J_n)
     source_fn = calc_source_fn(source_fn, epsilon, J_np1)
     for each_ray in rays:
         each_ray.formal_soln(n_depth_pts, source_fn)
