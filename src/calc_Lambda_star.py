@@ -15,7 +15,7 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
             grid_idx_lip1 = get_grid_index_for_ray_point(each_ray, ray_idx_l+1, n_depth_pts)
 
             inorm_tmp[grid_idx_lim1, j] =  each_ray.gamma(ray_idx_l-1)
-            inorm_tmp[l]                =  each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)
+            inorm_tmp[l,             j] =  each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)
             inorm_tmp[grid_idx_lip1, j] = (each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)) * exp(-each_ray.Delta_tau(ray_idx_l)) + each_ray.alpha(ray_idx_l+1)
 
         # TODO: these +1/-1 offsets are hard-coded, works in 1-D plane parallel,
