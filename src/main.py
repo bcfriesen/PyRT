@@ -2,12 +2,13 @@
 n_mu_pts = 10
 
 # number of physical grid depth points
-n_depth_pts = 100
+n_depth_pts = 10
 
 # thermalization parameter. 1 = LTE; 0 = pure scattering
 epsilon = 1.0e-4
 
 import numpy as np
+np.set_printoptions(linewidth=200)
 # mean intensity
 J_n   = np.zeros(n_depth_pts)
 # initial "guess" for J
