@@ -6,6 +6,7 @@ import numpy as np
 def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
     inorm_tmp = np.zeros([n_depth_pts, n_mu_pts])
     for l in range(1, n_depth_pts-1):
+        inorm_tmp[:, :] = 0
         for j, each_ray in enumerate(rays):
             # get ray index corresponding to physical grid index l
             ray_idx_l   = get_ray_index_for_grid_point(each_ray, l, n_depth_pts)
