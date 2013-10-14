@@ -21,9 +21,9 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
 
         # TODO: these +1/-1 offsets are hard-coded, works in 1-D plane parallel,
         # but won't work in more complex geometries
-        Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], mu_grid)
-        Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l ,  :], mu_grid)
-        Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[l+1, :], mu_grid)
+        Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], x=mu_grid)
+        Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l ,  :], x=mu_grid)
+        Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[l+1, :], x=mu_grid)
 
     # boundary cases.
 
@@ -49,8 +49,8 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
             inorm_tmp[l,             j] = 0
             inorm_tmp[grid_idx_lip1, j] = each_ray.alpha(ray_idx_l+1)
 
-    Lambda_star[l,   l] = 0.5 * simps(inorm_tmp[l ,  :], mu_grid)
-    Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[l+1, :], mu_grid)
+    Lambda_star[l,   l] = 0.5 * simps(inorm_tmp[l ,  :], x=mu_grid)
+    Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[l+1, :], x=mu_grid)
 
     inorm_tmp[:, :] = 0
 
@@ -74,7 +74,7 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
             inorm_tmp[l,             j] = planck_fn(1)
             inorm_tmp[grid_idx_lip1, j] = planck_fn(1) * exp(-each_ray.Delta_tau(ray_idx_l)) + each_ray.alpha(ray_idx_l+1)
 
-    Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], mu_grid)
-    Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l  , :], mu_grid)
+    Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], x=mu_grid)
+    Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l  , :], x=mu_grid)
 
     return(Lambda_star)
