@@ -55,7 +55,6 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
     inorm_tmp[:, :] = 0
 
     # depth
-    from planck import planck_fn
     l = n_depth_pts-1
     for j, each_ray in enumerate(rays):
         # at depth, we don't have an "i-1" term on rays with mu > 0 because they start at depth
@@ -71,8 +70,8 @@ def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
 
             grid_idx_lip1 = get_grid_index_for_ray_point(each_ray, ray_idx_l+1, n_depth_pts)
 
-            inorm_tmp[l,             j] = planck_fn(1)
-            inorm_tmp[grid_idx_lip1, j] = planck_fn(1) * exp(-each_ray.Delta_tau(ray_idx_l)) + each_ray.alpha(ray_idx_l+1)
+            inorm_tmp[l,             j] = 0.0
+            inorm_tmp[grid_idx_lip1, j] = each_ray.alpha(ray_idx_l+1)
 
     Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], x=mu_grid)
     Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l  , :], x=mu_grid)
