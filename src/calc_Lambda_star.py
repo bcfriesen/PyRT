@@ -1,79 +1,135 @@
-from grid_functions import get_grid_index_for_ray_point, get_ray_index_for_grid_point
+from grid_functions import get_ray_index_for_grid_point
 from math import exp
 from scipy.integrate import simps
 import numpy as np
 
 def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
-    inorm_tmp = np.zeros([n_depth_pts, n_mu_pts])
-    for l in range(1, n_depth_pts-1):
-        inorm_tmp[:, :] = 0
-        for j, each_ray in enumerate(rays):
-            # get ray index corresponding to physical grid index l
-            ray_idx_l   = get_ray_index_for_grid_point(each_ray, l, n_depth_pts)
 
-            # get physical grid indices corresponding to i+1 and i-1 along the ray
-            grid_idx_lim1 = get_grid_index_for_ray_point(each_ray, ray_idx_l-1, n_depth_pts)
-            grid_idx_lip1 = get_grid_index_for_ray_point(each_ray, ray_idx_l+1, n_depth_pts)
-
-            inorm_tmp[grid_idx_lim1, j] =  each_ray.gamma(ray_idx_l-1)
-            inorm_tmp[l,             j] =  each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)
-            inorm_tmp[grid_idx_lip1, j] = (each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)) * exp(-each_ray.Delta_tau(ray_idx_l)) + each_ray.alpha(ray_idx_l+1)
-
-        # TODO: these +1/-1 offsets are hard-coded, works in 1-D plane parallel,
-        # but won't work in more complex geometries
-        Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], x=mu_grid)
-        Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l ,  :], x=mu_grid)
-        Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[l+1, :], x=mu_grid)
-
-    # boundary cases.
+    # contributions from each ray to Lstar at a given point on the physical
+    # grid; these will be integrated over solid angle such that Lambda[S] = J
+    i_hat_at_l = np.zeros(n_mu_pts)
+    # matrix elements at the nearest neighbors of grid point l
+    i_hat_at_lp1 = np.zeros(n_mu_pts)
+    i_hat_at_lm1 = np.zeros(n_mu_pts)
 
     # surface
+
     l = 0
-    inorm_tmp[:, :] = 0
-    for j, each_ray in enumerate(rays):
-        # at the surface, outgoing rays (those with mu > 0) only have i-1 and i components, no i+1
-        if each_ray.mu > 0:
-            ray_idx_l = get_ray_index_for_grid_point(each_ray, l, n_depth_pts)
 
-            grid_idx_lim1 = get_grid_index_for_ray_point(each_ray, ray_idx_l-1, n_depth_pts)
+    for ray in rays:
+        ray.Lstar_contrib[:] = 0.0
+        j = get_ray_index_for_grid_point(ray, l, n_depth_pts)
+        # for rays coming in from the surface
+        if ray.mu < 0.0:
+            for i in range(n_depth_pts):
+                # rays coming in from the surface have zero incident intensity, so we have no "i <= j-1" values. instead we just start at i = j
+                if i == j:
+                    ray.Lstar_contrib[i] = 0.0
+                if i == j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
+                elif i > j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
+        # for rays coming up from depth
+        else: # ray.mu > 0.0
+            for i in range(n_depth_pts):
+                # rays coming in from the surface have zero incident intensity, so we have no "i <= j-1" values. instead we just start at i = j
+                if i < j-1:
+                    ray.Lstar_contrib[i] = 0.0
+                elif i == j-1:
+                    ray.Lstar_contrib[i] = ray.gamma(i)
+                if i == j:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.beta(i)
+                if i == j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
+                elif i > j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
 
-            inorm_tmp[grid_idx_lim1, j] = each_ray.gamma(ray_idx_l-1)
-            inorm_tmp[l,             j] = each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)
-        else:
-            # at the surface we don't have an "i-1" term on incoming rays (those with mu < 0)
-            # no illumination from the surface, so incoming rays at the surface have I(surface) = 0
-            ray_idx_l = get_ray_index_for_grid_point(each_ray, l, n_depth_pts)
+    for j, ray in enumerate(rays):
+        k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
+        i_hat_at_l[j] = ray.Lstar_contrib[k]
 
-            grid_idx_lip1 = get_grid_index_for_ray_point(each_ray, ray_idx_l+1, n_depth_pts)
+    for j, ray in enumerate(rays):
+        k = get_ray_index_for_grid_point(ray, l+1, n_depth_pts)
+        i_hat_at_lp1[j] = ray.Lstar_contrib[k]
 
-            inorm_tmp[l,             j] = 0
-            inorm_tmp[grid_idx_lip1, j] = each_ray.alpha(ray_idx_l+1)
+    Lambda_star[l, l] = 0.5 * simps(i_hat_at_l, mu_grid)
+    Lambda_star[l+1, l] = 0.5 * simps(i_hat_at_lp1, mu_grid)
 
-    Lambda_star[l,   l] = 0.5 * simps(inorm_tmp[l ,  :], x=mu_grid)
-    Lambda_star[l+1, l] = 0.5 * simps(inorm_tmp[l+1, :], x=mu_grid)
 
-    inorm_tmp[:, :] = 0
+    # all the non-boundary points
+    for l in range(1, n_depth_pts-1):
+
+        for ray in rays:
+            ray.Lstar_contrib[:] = 0.0
+            j = get_ray_index_for_grid_point(ray, l, n_depth_pts)
+            for i in range(n_depth_pts): # march forward along a ray
+                if i < j-1:
+                    ray.Lstar_contrib[i] = 0.0
+                elif i == j-1:
+                    ray.Lstar_contrib[i] = ray.gamma(i)
+                elif i == j:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.beta(i)
+                elif i == j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
+                elif i > j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
+
+        for j, ray in enumerate(rays):
+            k = get_ray_index_for_grid_point(ray, l-1, n_depth_pts)
+            i_hat_at_lm1[j] = ray.Lstar_contrib[k]
+
+        for j, ray in enumerate(rays):
+            k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
+            i_hat_at_l[j] = ray.Lstar_contrib[k]
+
+        for j, ray in enumerate(rays):
+            k = get_ray_index_for_grid_point(ray, l+1, n_depth_pts)
+            i_hat_at_lp1[j] = ray.Lstar_contrib[k]
+
+        Lambda_star[l-1, l] = 0.5 * simps(i_hat_at_lm1, mu_grid)
+        Lambda_star[l  , l] = 0.5 * simps(i_hat_at_l  , mu_grid)
+        Lambda_star[l+1, l] = 0.5 * simps(i_hat_at_lp1, mu_grid)
+
 
     # depth
+
     l = n_depth_pts-1
-    for j, each_ray in enumerate(rays):
-        # at depth, we don't have an "i-1" term on rays with mu > 0 because they start at depth
-        if (each_ray.mu < 0):
-            ray_idx_l    = get_ray_index_for_grid_point(each_ray, l, n_depth_pts)
 
-            grid_idx_lim1 = get_grid_index_for_ray_point(each_ray, ray_idx_l-1, n_depth_pts)
+    for ray in rays:
+        ray.Lstar_contrib[:] = 0.0
+        j = get_ray_index_for_grid_point(ray, l, n_depth_pts)
+        # for rays coming in from the surface
+        if ray.mu < 0.0:
+            for i in range(n_depth_pts):
+                if i < j-1:
+                    ray.Lstar_contrib[i] = 0.0
+                elif i == j-1:
+                    ray.Lstar_contrib[i] = ray.gamma(i)
+                if i == j:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.beta(i)
+                if i == j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
+                elif i > j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
+        # for rays coming up from depth
+        else: # ray.mu > 0.0
+            for i in range(n_depth_pts):
+                if i == j:
+                    ray.Lstar_contrib[i] = 0.0
+                if i == j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
+                elif i > j+1:
+                    ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
 
-            inorm_tmp[grid_idx_lim1, j] = each_ray.gamma(ray_idx_l-1)
-            inorm_tmp[l,             j] = each_ray.gamma(ray_idx_l-1) * exp(-each_ray.Delta_tau(ray_idx_l-1)) + each_ray.beta(ray_idx_l)
-        else:
-            ray_idx_l    = get_ray_index_for_grid_point(each_ray, l, n_depth_pts)
+    for j, ray in enumerate(rays):
+        k = get_ray_index_for_grid_point(ray, l-1, n_depth_pts)
+        i_hat_at_lm1[j] = ray.Lstar_contrib[k]
 
-            grid_idx_lip1 = get_grid_index_for_ray_point(each_ray, ray_idx_l+1, n_depth_pts)
+    for j, ray in enumerate(rays):
+        k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
+        i_hat_at_l[j] = ray.Lstar_contrib[k]
 
-            inorm_tmp[l,             j] = 0.0
-            inorm_tmp[grid_idx_lip1, j] = each_ray.alpha(ray_idx_l+1)
-
-    Lambda_star[l-1, l] = 0.5 * simps(inorm_tmp[l-1, :], x=mu_grid)
-    Lambda_star[l  , l] = 0.5 * simps(inorm_tmp[l  , :], x=mu_grid)
+    Lambda_star[l-1, l] = 0.5 * simps(i_hat_at_lm1, mu_grid)
+    Lambda_star[l  , l] = 0.5 * simps(i_hat_at_l  , mu_grid)
 
     return(Lambda_star)

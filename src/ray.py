@@ -1,7 +1,7 @@
 import numpy as np
 from planck import planck_fn
 import astropy.units as u
-from grid_functions import *
+from grid_functions import get_grid_index_for_ray_point
 from math import fabs, exp
 
 class ray:
@@ -15,6 +15,7 @@ class ray:
         else:
             self.I_lam[0] = 0
         self.tau_grid = np.zeros(n_depth_pts)
+        self.Lstar_contrib = np.zeros(n_depth_pts) # TODO: n_depth_pts = n_ray_pts only for plane-parallel, need to generalize this later
 
     def calc_tau(self, n_depth_pts, radial_grid, chi_grid):
         """Given the opacity grid, calculate the optical depth along the ray"""

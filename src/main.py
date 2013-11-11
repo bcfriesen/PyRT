@@ -2,23 +2,19 @@
 n_mu_pts = 10
 
 # number of physical grid depth points
-n_depth_pts = 10
+n_depth_pts = 100
 
 # thermalization parameter. 1 = LTE; 0 = pure scattering
-epsilon = 1.0e-4
+epsilon = 1.0e-3
 
 import numpy as np
-np.set_printoptions(linewidth=200)
-# mean intensity
-J_n   = np.zeros(n_depth_pts)
-# initial "guess" for J
-J_n[:]  = 2
 
-# source function, assumed to be isotropic (so no angle dependence)
-source_fn = np.zeros(n_depth_pts)
+# "old" source function estimate
+source_fn_n = np.zeros(n_depth_pts)
 
-from source_fn import calc_source_fn
-source_fn = calc_source_fn(source_fn, epsilon, J_n)
+from planck import planck_fn
+# initial "guess" for the source function
+source_fn_n[:]  = planck_fn(1)
 
 import astropy.units as u
 # physical grid
@@ -38,7 +34,11 @@ for mu in mu_grid:
 # let's get some useful (nonzero) values to start
 for each_ray in rays:
     each_ray.calc_tau(n_depth_pts, radial_grid, chi_grid)
-    each_ray.formal_soln(n_depth_pts, source_fn)
+    each_ray.formal_soln(n_depth_pts, source_fn_n)
+
+from moments import calc_J
+J_fs = np.empty(n_depth_pts)
+J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
 
 # build tri-diagonal component of Lambda matrix
 Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
@@ -47,23 +47,28 @@ from calc_Lambda_star import calc_Lambda_star
 Lambda_star = calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid)
 
 # mean intensity from the formal solution
-J_fs  = np.zeros(n_depth_pts)
+source_fn_fs = np.zeros(n_depth_pts)
+from source_fn import calc_source_fn
+source_fn_fs = calc_source_fn(source_fn_n, epsilon, J_fs)
 
-from moments import calc_J
+planck_grid = np.zeros(n_depth_pts)
+for i in range(len(planck_grid)):
+    planck_grid[i] = planck_fn(1)
+
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
-Delta_J = np.zeros([n_depth_pts])
-for i in range(10):
-    J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    Delta_J = np.linalg.solve(1 - (1 - epsilon) * Lambda_star, J_fs - J_n)
-    J_np1 = J_n + Delta_J
-    source_fn = calc_source_fn(source_fn, epsilon, J_np1)
+Delta_S = np.zeros([n_depth_pts])
+for i in range(50):
+    Delta_S = np.linalg.solve(1.0 - (1.0 - epsilon) * Lambda_star, source_fn_fs - source_fn_n)
+    source_fn_np1 = source_fn_n + Delta_S
     for each_ray in rays:
-        each_ray.formal_soln(n_depth_pts, source_fn)
+        each_ray.formal_soln(n_depth_pts, source_fn_np1)
     J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    ax.plot(chi_grid, J_np1)
-    J_n = J_np1
+    source_fn_fs = calc_source_fn(source_fn_np1, epsilon, J_fs)
+    ax.plot(chi_grid, J_fs)
+    source_fn_n = source_fn_np1
 ax.set_xscale('log')
 ax.set_yscale('log')
+ax.set_ylim(1.0e-2, 2.0e0)
 fig.savefig('derp.png')
