@@ -44,7 +44,7 @@ J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
 Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
 
 from calc_Lambda_star import calc_Lambda_star
-Lambda_star = calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid)
+Lambda_star = calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid)
 
 # mean intensity from the formal solution
 source_fn_fs = np.zeros(n_depth_pts)

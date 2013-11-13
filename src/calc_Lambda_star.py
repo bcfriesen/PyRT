@@ -3,7 +3,9 @@ from math import exp
 from scipy.integrate import simps
 import numpy as np
 
-def calc_Lambda_star(Lambda_star, n_depth_pts, n_mu_pts, rays, mu_grid):
+def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
+
+    Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
 
     # contributions from each ray to Lstar at a given point on the physical
     # grid; these will be integrated over solid angle such that Lambda[S] = J
