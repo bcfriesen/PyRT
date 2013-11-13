@@ -49,7 +49,7 @@ Lambda_star = calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid)
 # mean intensity from the formal solution
 source_fn_fs = np.zeros(n_depth_pts)
 from source_fn import calc_source_fn
-source_fn_fs = calc_source_fn(source_fn_n, epsilon, J_fs)
+source_fn_fs = calc_source_fn(epsilon, J_fs)
 
 planck_grid = np.zeros(n_depth_pts)
 for i in range(len(planck_grid)):
@@ -65,7 +65,7 @@ for i in range(50):
     for each_ray in rays:
         each_ray.formal_soln(n_depth_pts, source_fn_np1)
     J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    source_fn_fs = calc_source_fn(source_fn_np1, epsilon, J_fs)
+    source_fn_fs = calc_source_fn(epsilon, J_fs)
     ax.plot(chi_grid, J_fs)
     source_fn_n = source_fn_np1
 ax.set_xscale('log')
