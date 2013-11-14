@@ -44,15 +44,12 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
 
     for j, ray in enumerate(rays):
-        k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
-        i_hat[l, j] = ray.Lstar_contrib[k]
+        for ll in range(l, n_depth_pts):
+            k = get_ray_index_for_grid_point(ray, ll, n_depth_pts)
+            i_hat[ll, j] = ray.Lstar_contrib[k]
 
-    for j, ray in enumerate(rays):
-        k = get_ray_index_for_grid_point(ray, l+1, n_depth_pts)
-        i_hat[l+1, j] = ray.Lstar_contrib[k]
-
-    Lambda_star[l  , l] = 0.5 * simps(i_hat[l  , :], mu_grid)
-    Lambda_star[l+1, l] = 0.5 * simps(i_hat[l+1, :], mu_grid)
+    for ll in range(l, n_depth_pts):
+        Lambda_star[ll, l] = 0.5 * simps(i_hat[ll, :], mu_grid)
 
 
     # all the non-boundary points
@@ -74,20 +71,12 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
 
         for j, ray in enumerate(rays):
-            k = get_ray_index_for_grid_point(ray, l-1, n_depth_pts)
-            i_hat[l-1, j] = ray.Lstar_contrib[k]
+            for ll in range(l-1, n_depth_pts):
+                k = get_ray_index_for_grid_point(ray, ll, n_depth_pts)
+                i_hat[ll, j] = ray.Lstar_contrib[k]
 
-        for j, ray in enumerate(rays):
-            k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
-            i_hat[l, j] = ray.Lstar_contrib[k]
-
-        for j, ray in enumerate(rays):
-            k = get_ray_index_for_grid_point(ray, l+1, n_depth_pts)
-            i_hat[l+1, j] = ray.Lstar_contrib[k]
-
-        Lambda_star[l-1, l] = 0.5 * simps(i_hat[l-1, :], mu_grid)
-        Lambda_star[l  , l] = 0.5 * simps(i_hat[l  , :], mu_grid)
-        Lambda_star[l+1, l] = 0.5 * simps(i_hat[l+1, :], mu_grid)
+        for ll in range(l-1, n_depth_pts):
+            Lambda_star[ll, l] = 0.5 * simps(i_hat[ll, :], mu_grid)
 
 
     # depth
@@ -121,14 +110,11 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
 
     for j, ray in enumerate(rays):
-        k = get_ray_index_for_grid_point(ray, l-1, n_depth_pts)
-        i_hat[l-1, j] = ray.Lstar_contrib[k]
+        for ll in range(l-1, n_depth_pts):
+            k = get_ray_index_for_grid_point(ray, ll, n_depth_pts)
+            i_hat[ll, j] = ray.Lstar_contrib[k]
 
-    for j, ray in enumerate(rays):
-        k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
-        i_hat[l, j] = ray.Lstar_contrib[k]
-
-    Lambda_star[l-1, l] = 0.5 * simps(i_hat[l-1, :], mu_grid)
-    Lambda_star[l  , l] = 0.5 * simps(i_hat[l  , :], mu_grid)
+    for ll in range(l-1, n_depth_pts):
+        Lambda_star[ll, l] = 0.5 * simps(i_hat[ll, :], mu_grid)
 
     return(Lambda_star)

@@ -46,6 +46,7 @@ Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
 
 from calc_Lambda_star import calc_Lambda_star
 Lambda_star = calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid)
+print(Lambda_star)
 
 # get source function from the formal solution
 from source_fn import calc_source_fn
@@ -61,14 +62,14 @@ planck_grid[:] = planck_fn(1)
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
-Delta_S = np.zeros([n_depth_pts])
-for i in range(50):
-    for each_ray in rays:
-        each_ray.formal_soln(n_depth_pts, source_fn_n)
-    J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
-    source_fn_np1 = np.linalg.solve(1.0 - (1.0 - epsilon) * Lambda_star, (1.0 - epsilon) * (J_fs - np.dot(Lambda_star, source_fn_n)) + epsilon*planck_grid)
+
+# if Lstar is full then we should be able to do regular Lambda iteration with
+# it. this will tell us if we've constructed it correctly.
+for i in range(5):
+    J_fs = np.dot(Lambda_star, source_fn_n)
+    source_fn_n = calc_source_fn(epsilon, J_fs)
     ax.plot(chi_grid, J_fs)
-    source_fn_n = source_fn_np1
+
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim(1.0e-2, 2.0e0)
