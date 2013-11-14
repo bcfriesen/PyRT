@@ -102,7 +102,7 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
         else: # ray.mu > 0.0
             for i in range(n_depth_pts):
                 if i == j:
-                    ray.Lstar_contrib[i] = 0.0
+                    ray.Lstar_contrib[i] = 1.0
                 elif i == j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
                 elif i > j+1:
