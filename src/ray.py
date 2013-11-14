@@ -5,17 +5,18 @@ from grid_functions import get_grid_index_for_ray_point
 from math import fabs, exp
 
 class ray:
-    def __init__(self, mu, n_depth_pts, radial_grid):
+    def __init__(self, mu, n_ray_pts, radial_grid):
+        self.n_ray_pts = n_ray_pts
         self.mu = mu
-        self.I_lam = np.zeros(n_depth_pts)
+        self.I_lam = np.zeros(n_ray_pts)
         # outward pointing rays should have diffusion as their initial condition
         if self.mu > 0:
             self.I_lam[0] = planck_fn(1) # TODO: make this the diffusion condition
         # our object is not illuminated from some other source so inward pointing rays have zero intensity to start
         else:
             self.I_lam[0] = 0
-        self.tau_grid = np.zeros(n_depth_pts)
-        self.Lstar_contrib = np.zeros(n_depth_pts) # TODO: n_depth_pts = n_ray_pts only for plane-parallel, need to generalize this later
+        self.tau_grid = np.zeros(n_ray_pts)
+        self.Lstar_contrib = np.zeros(n_ray_pts)
 
     def calc_tau(self, n_depth_pts, radial_grid, chi_grid):
         """Given the opacity grid, calculate the optical depth along the ray"""
@@ -48,6 +49,6 @@ class ray:
             return (self.alpha(i) * source_fn[grid_idx_im1] + self.beta(i) * source_fn[grid_idx_i])
 
     # perform a formal solution along the ray to get new I
-    def formal_soln(self, n_depth_pts, source_fn):
-        for i in range(1, n_depth_pts):
-            self.I_lam[i] = self.I_lam[i-1] * exp(-self.Delta_tau(i-1)) + self.Delta_I(i, n_depth_pts, source_fn)
+    def formal_soln(self, source_fn):
+        for i in range(1, len(self.I_lam[:])):
+            self.I_lam[i] = self.I_lam[i-1] * exp(-self.Delta_tau(i-1)) + self.Delta_I(i, self.n_ray_pts, source_fn)

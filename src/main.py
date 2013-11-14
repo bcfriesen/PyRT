@@ -7,6 +7,10 @@ n_mu_pts = 10
 # number of physical grid depth points
 n_depth_pts = 10
 
+# number of points along each ray. for plane-parallel this is the same as the
+# number of depth points, but for other geometries it will be different.
+n_ray_pts = n_depth_pts
+
 # thermalization parameter. 1 = LTE; 0 = pure scattering
 epsilon = 1.0e-3
 
@@ -30,12 +34,12 @@ mu_grid = np.linspace(-1, 1, n_mu_pts)
 rays = []
 from ray import ray
 for mu in mu_grid:
-    rays.append(ray(mu, n_depth_pts, radial_grid))
+    rays.append(ray(mu, n_ray_pts, radial_grid))
 
 # let's get some useful (nonzero) values to start
 for each_ray in rays:
     each_ray.calc_tau(n_depth_pts, radial_grid, chi_grid)
-    each_ray.formal_soln(n_depth_pts, source_fn_n)
+    each_ray.formal_soln(source_fn_n)
 
 from moments import calc_J
 J_fs = np.empty(n_depth_pts)
