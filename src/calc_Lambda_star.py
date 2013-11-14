@@ -24,21 +24,20 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
                 # rays coming in from the surface have zero incident intensity, so we have no "i <= j-1" values. instead we just start at i = j
                 if i == j:
                     ray.Lstar_contrib[i] = 0.0
-                if i == j+1:
+                elif i == j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
                 elif i > j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
         # for rays coming up from depth
         else: # ray.mu > 0.0
             for i in range(n_depth_pts):
-                # rays coming in from the surface have zero incident intensity, so we have no "i <= j-1" values. instead we just start at i = j
                 if i < j-1:
                     ray.Lstar_contrib[i] = 0.0
                 elif i == j-1:
                     ray.Lstar_contrib[i] = ray.gamma(i)
-                if i == j:
+                elif i == j:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.beta(i)
-                if i == j+1:
+                elif i == j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
                 elif i > j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
@@ -93,9 +92,9 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
                     ray.Lstar_contrib[i] = 0.0
                 elif i == j-1:
                     ray.Lstar_contrib[i] = ray.gamma(i)
-                if i == j:
+                elif i == j:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.beta(i)
-                if i == j+1:
+                elif i == j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
                 elif i > j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
@@ -104,7 +103,7 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
             for i in range(n_depth_pts):
                 if i == j:
                     ray.Lstar_contrib[i] = 0.0
-                if i == j+1:
+                elif i == j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1)) + ray.alpha(i)
                 elif i > j+1:
                     ray.Lstar_contrib[i] = ray.Lstar_contrib[i-1] * exp(-ray.Delta_tau(i-1))
