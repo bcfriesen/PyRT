@@ -9,10 +9,7 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
 
     # contributions from each ray to Lstar at a given point on the physical
     # grid; these will be integrated over solid angle such that Lambda[S] = J
-    i_hat_at_l = np.zeros(n_mu_pts)
-    # matrix elements at the nearest neighbors of grid point l
-    i_hat_at_lp1 = np.zeros(n_mu_pts)
-    i_hat_at_lm1 = np.zeros(n_mu_pts)
+    i_hat = np.zeros([n_depth_pts, n_mu_pts])
 
     # surface
 
@@ -48,14 +45,14 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
 
     for j, ray in enumerate(rays):
         k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
-        i_hat_at_l[j] = ray.Lstar_contrib[k]
+        i_hat[l, j] = ray.Lstar_contrib[k]
 
     for j, ray in enumerate(rays):
         k = get_ray_index_for_grid_point(ray, l+1, n_depth_pts)
-        i_hat_at_lp1[j] = ray.Lstar_contrib[k]
+        i_hat[l+1, j] = ray.Lstar_contrib[k]
 
-    Lambda_star[l, l] = 0.5 * simps(i_hat_at_l, mu_grid)
-    Lambda_star[l+1, l] = 0.5 * simps(i_hat_at_lp1, mu_grid)
+    Lambda_star[l  , l] = 0.5 * simps(i_hat[l  , :], mu_grid)
+    Lambda_star[l+1, l] = 0.5 * simps(i_hat[l+1, :], mu_grid)
 
 
     # all the non-boundary points
@@ -78,19 +75,19 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
 
         for j, ray in enumerate(rays):
             k = get_ray_index_for_grid_point(ray, l-1, n_depth_pts)
-            i_hat_at_lm1[j] = ray.Lstar_contrib[k]
+            i_hat[l-1, j] = ray.Lstar_contrib[k]
 
         for j, ray in enumerate(rays):
             k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
-            i_hat_at_l[j] = ray.Lstar_contrib[k]
+            i_hat[l, j] = ray.Lstar_contrib[k]
 
         for j, ray in enumerate(rays):
             k = get_ray_index_for_grid_point(ray, l+1, n_depth_pts)
-            i_hat_at_lp1[j] = ray.Lstar_contrib[k]
+            i_hat[l+1, j] = ray.Lstar_contrib[k]
 
-        Lambda_star[l-1, l] = 0.5 * simps(i_hat_at_lm1, mu_grid)
-        Lambda_star[l  , l] = 0.5 * simps(i_hat_at_l  , mu_grid)
-        Lambda_star[l+1, l] = 0.5 * simps(i_hat_at_lp1, mu_grid)
+        Lambda_star[l-1, l] = 0.5 * simps(i_hat[l-1, :], mu_grid)
+        Lambda_star[l  , l] = 0.5 * simps(i_hat[l  , :], mu_grid)
+        Lambda_star[l+1, l] = 0.5 * simps(i_hat[l+1, :], mu_grid)
 
 
     # depth
@@ -125,13 +122,13 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
 
     for j, ray in enumerate(rays):
         k = get_ray_index_for_grid_point(ray, l-1, n_depth_pts)
-        i_hat_at_lm1[j] = ray.Lstar_contrib[k]
+        i_hat[l-1, j] = ray.Lstar_contrib[k]
 
     for j, ray in enumerate(rays):
         k = get_ray_index_for_grid_point(ray, l, n_depth_pts)
-        i_hat_at_l[j] = ray.Lstar_contrib[k]
+        i_hat[l, j] = ray.Lstar_contrib[k]
 
-    Lambda_star[l-1, l] = 0.5 * simps(i_hat_at_lm1, mu_grid)
-    Lambda_star[l  , l] = 0.5 * simps(i_hat_at_l  , mu_grid)
+    Lambda_star[l-1, l] = 0.5 * simps(i_hat[l-1, :], mu_grid)
+    Lambda_star[l  , l] = 0.5 * simps(i_hat[l  , :], mu_grid)
 
     return(Lambda_star)
