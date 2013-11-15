@@ -56,13 +56,6 @@ print(Lambda_star)
 from source_fn import calc_source_fn
 source_fn_n = calc_source_fn(epsilon, J_fs)
 
-planck_grid = np.zeros(n_depth_pts)
-for i in range(len(planck_grid)):
-    planck_grid[i] = planck_fn(1)
-
-planck_grid = np.zeros(n_depth_pts)
-planck_grid[:] = planck_fn(1)
-
 import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
