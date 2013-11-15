@@ -69,5 +69,5 @@ for i in range(5):
 
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.set_ylim(1.0e-2, 2.0e0)
+ax.set_ylim(1.0e-2, 1.0e1)
 fig.savefig('derp.png')
