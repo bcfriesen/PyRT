@@ -2,10 +2,10 @@ import numpy as np
 np.set_printoptions(linewidth=200)
 
 # number of angle points
-n_mu_pts = 10
+n_mu_pts = 100
 
 # number of physical grid depth points
-n_depth_pts = 10
+n_depth_pts = 100
 
 # number of points along each ray. for plane-parallel this is the same as the
 # number of depth points, but for other geometries it will be different.
