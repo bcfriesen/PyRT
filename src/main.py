@@ -28,10 +28,10 @@ source_fn_n[:]  = planck_fn(1)
 
 import astropy.units as u
 # physical grid
-radial_grid = np.linspace(10, 1, n_depth_pts) * u.cm
+radial_grid = np.linspace(data['radius_min'], data['radius_max'], n_depth_pts) * u.cm
 
 # opacity grid
-chi_grid = np.logspace(-7, 3, n_depth_pts) * (1/u.cm)
+chi_grid = np.logspace(data['log10_chi_min'], data['log10_chi_max'], n_depth_pts) * (1/u.cm)
 
 # angular grid
 mu_grid = np.linspace(-1, 1, n_mu_pts)
@@ -74,4 +74,4 @@ for i in range(5):
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim(1.0e-2, 1.0e1)
-fig.savefig('derp.png')
+fig.savefig(data['plot_filename'])
