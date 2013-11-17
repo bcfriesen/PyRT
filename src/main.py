@@ -28,7 +28,7 @@ source_fn_n[:]  = planck_fn(1)
 
 import astropy.units as u
 # physical grid
-radial_grid = np.linspace(1, 10, n_depth_pts) * u.cm
+radial_grid = np.linspace(10, 1, n_depth_pts) * u.cm
 
 # opacity grid
 chi_grid = np.logspace(-7, 3, n_depth_pts) * (1/u.cm)
