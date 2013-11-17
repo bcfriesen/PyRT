@@ -1,6 +1,6 @@
 # read parameters from YAML file
 import yaml
-stream = open("test.yaml")
+stream = open("sample.yaml")
 data = yaml.load(stream)
 
 import numpy as np
