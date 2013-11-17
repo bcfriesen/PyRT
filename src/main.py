@@ -1,18 +1,23 @@
+# read parameters from YAML file
+import yaml
+stream = open("test.yaml")
+data = yaml.load(stream)
+
 import numpy as np
 np.set_printoptions(linewidth=200)
 
 # number of angle points
-n_mu_pts = 100
+n_mu_pts = data['n_mu_pts']
 
 # number of physical grid depth points
-n_depth_pts = 100
+n_depth_pts = data['n_depth_pts']
 
 # number of points along each ray. for plane-parallel this is the same as the
 # number of depth points, but for other geometries it will be different.
 n_ray_pts = n_depth_pts
 
 # thermalization parameter. 1 = LTE; 0 = pure scattering
-epsilon = 1.0e-3
+epsilon = data['epsilon']
 
 # "old" source function estimate
 source_fn_n = np.zeros(n_depth_pts)
