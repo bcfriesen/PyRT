@@ -55,7 +55,6 @@ Lambda_star = np.zeros([n_depth_pts, n_depth_pts])
 
 from calc_Lambda_star import calc_Lambda_star
 Lambda_star = calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid)
-print(Lambda_star)
 
 # get source function from the formal solution
 from source_fn import calc_source_fn
