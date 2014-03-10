@@ -9,12 +9,6 @@ class ray:
         self.n_ray_pts = n_ray_pts
         self.mu = mu
         self.I_lam = np.zeros(n_ray_pts)
-        # outward pointing rays should have diffusion as their initial condition
-        if self.mu > 0:
-            self.I_lam[0] = planck_fn(1) # TODO: make this the diffusion condition
-        # our object is not illuminated from some other source so inward pointing rays have zero intensity to start
-        else:
-            self.I_lam[0] = 0
         self.tau_grid = np.zeros(n_ray_pts)
         self.Lstar_contrib = np.zeros(n_ray_pts)
 
@@ -50,5 +44,19 @@ class ray:
 
     # perform a formal solution along the ray to get new I
     def formal_soln(self, source_fn):
+        # outward pointing rays should have diffusion as their initial condition
+        if self.mu > 0:
+	    # The weird term in the numerator of the dB/dtau term in the
+	    # diffusion condition is there because I assumed the medium was
+	    # isothermal when I wrote the Planck function "API" so it doesn't
+	    # take layer index as an argument. As a result the dB/dtau term is
+	    # zero when the atmosphere is isothermal. But I wanted to write the
+	    # derivative explicitly so it's clear that we're doing diffusion at
+	    # the inner boundary. Of course this will need
+	    # to be modified when we remove the isothermality restriction.
+            self.I_lam[0] = planck_fn(1) + (planck_fn(1) - planck_fn(1)) / (self.tau_grid[1] - self.tau_grid[0])
+        # our object is not illuminated from some other source so inward pointing rays have zero intensity to start
+        else:
+            self.I_lam[0] = 0
         for i in range(1, len(self.I_lam[:])):
             self.I_lam[i] = self.I_lam[i-1] * exp(-self.Delta_tau(i-1)) + self.Delta_I(i, self.n_ray_pts, source_fn)
