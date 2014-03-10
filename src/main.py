@@ -26,12 +26,11 @@ from planck import planck_fn
 # initial "guess" for the source function
 source_fn_n[:]  = planck_fn(1)
 
-import astropy.units as u
 # physical grid
-radial_grid = np.linspace(data['radius_min'], data['radius_max'], n_depth_pts) * u.cm
+radial_grid = np.linspace(data['radius_min'], data['radius_max'], n_depth_pts)
 
 # opacity grid
-chi_grid = np.logspace(data['log10_chi_min'], data['log10_chi_max'], n_depth_pts) * (1/u.cm)
+chi_grid = np.logspace(data['log10_chi_min'], data['log10_chi_max'], n_depth_pts)
 
 # angular grid
 mu_grid = np.linspace(-1, 1, n_mu_pts)

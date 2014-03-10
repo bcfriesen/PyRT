@@ -20,7 +20,7 @@ class ray:
 
     def calc_tau(self, n_depth_pts, radial_grid, chi_grid):
         """Given the opacity grid, calculate the optical depth along the ray"""
-        self.tau_grid[0] = (0 * u.dimensionless_unscaled)
+        self.tau_grid[0] = 0.0
         for i, depth in enumerate(radial_grid):
             if i > 0:
                 grid_idx_im1 = get_grid_index_for_ray_point(self, i-1, n_depth_pts)
