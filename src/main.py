@@ -74,9 +74,14 @@ J_new = np.empty(n_depth_pts)
 J_old = np.empty(n_depth_pts)
 
 J_old = J_fs
-# if Lstar is full then we should be able to do regular Lambda iteration with
-# it. this will tell us if we've constructed it correctly.
-for i in range(5):
+
+# Right now L_star is full, so that we can do "traditional" Lambda iteration
+# with it if we want (to make sure that we're calculating the matrix elements
+# correctly). This also means that basically a single iteration of ALI will
+# give us the full, globally converged solution because Lambda_star has all the
+# information from all the rays through all the voxels. What we're doing is
+# essentially equivalent to the integral solution of the RTE.
+for i in range(1):
     source_fn_n = calc_source_fn(epsilon, J_old)
     J_fs = np.dot(Lambda_star, source_fn_n)
     J_new = np.linalg.solve(np.identity(n_depth_pts) - (1.0 - epsilon)*Lambda_star, J_fs - np.dot((1.0 - epsilon)*Lambda_star, J_old))
