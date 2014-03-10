@@ -24,7 +24,7 @@ source_fn_n = np.zeros(n_depth_pts)
 
 from planck import planck_fn
 # initial "guess" for the source function
-source_fn_n[:]  = planck_fn(1)
+source_fn_n[:] = planck_fn(1)
 
 # physical grid
 radial_grid = np.linspace(data['radius_min'], data['radius_max'], n_depth_pts)
