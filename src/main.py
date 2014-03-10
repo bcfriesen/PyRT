@@ -82,7 +82,6 @@ for i in range(5):
     J_new = np.linalg.solve(np.identity(n_depth_pts) - (1.0 - epsilon)*Lambda_star, J_fs - np.dot((1.0 - epsilon)*Lambda_star, J_old))
     J_old = J_new
     ax.plot(chi_grid, J_new)
-    print(J_new)
 
 ax.set_xscale('log')
 ax.set_yscale('log')
