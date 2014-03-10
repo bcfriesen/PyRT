@@ -59,9 +59,16 @@ Lambda_star = calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid)
 from source_fn import calc_source_fn
 source_fn_n = calc_source_fn(epsilon, J_fs)
 
-import matplotlib.pyplot as plt
-fig = plt.figure()
-ax = fig.add_subplot(111)
+from matplotlib import pyplot as plt, gridspec
+from math import sqrt
+
+golden_ratio = (1.0 + sqrt(5.0)) / 2.0
+
+fig = plt.figure(figsize=(11.0, 11.0 / golden_ratio), dpi=128)
+
+gs = gridspec.GridSpec(1, 1)
+
+ax = plt.subplot(gs[0, 0])
 
 J_new = np.empty(n_depth_pts)
 J_old = np.empty(n_depth_pts)
@@ -80,4 +87,5 @@ for i in range(5):
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim(1.0e-8, 1.0e2)
+plt.show()
 fig.savefig(data['plot_filename'])
