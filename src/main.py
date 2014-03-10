@@ -63,14 +63,21 @@ import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
+J_new = np.empty(n_depth_pts)
+J_old = np.empty(n_depth_pts)
+
+J_old = J_fs
 # if Lstar is full then we should be able to do regular Lambda iteration with
 # it. this will tell us if we've constructed it correctly.
 for i in range(5):
+    source_fn_n = calc_source_fn(epsilon, J_old)
     J_fs = np.dot(Lambda_star, source_fn_n)
-    source_fn_n = calc_source_fn(epsilon, J_fs)
-    ax.plot(chi_grid, J_fs)
+    J_new = np.linalg.solve(np.identity(n_depth_pts) - (1.0 - epsilon)*Lambda_star, J_fs - np.dot((1.0 - epsilon)*Lambda_star, J_old))
+    J_old = J_new
+    ax.plot(chi_grid, J_new)
+    print(J_new)
 
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.set_ylim(1.0e-2, 1.0e1)
+ax.set_ylim(1.0e-8, 1.0e2)
 fig.savefig(data['plot_filename'])
