@@ -116,4 +116,12 @@ def calc_Lambda_star(n_depth_pts, n_mu_pts, rays, mu_grid):
     for ll in range(n_depth_pts):
         Lambda_star[ll, l] = 0.5 * simps(i_hat[ll, :], mu_grid)
 
+    # Even though we did all the work to calculate the full Lambda matrix,
+    # let's force it to be tri-diagonal so we can see how well our ALI scheme
+    # works with an "incomplete" ALO.
+    for i in range(n_depth_pts):
+        for j in range(n_depth_pts):
+            if (i != j and i != j+1 and i != j-1):
+                Lambda_star[i, j] = 0.0
+
     return(Lambda_star)

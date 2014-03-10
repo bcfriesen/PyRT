@@ -81,9 +81,12 @@ J_old = J_fs
 # give us the full, globally converged solution because Lambda_star has all the
 # information from all the rays through all the voxels. What we're doing is
 # essentially equivalent to the integral solution of the RTE.
-for i in range(1):
+for i in range(10):
     source_fn_n = calc_source_fn(epsilon, J_old)
-    J_fs = np.dot(Lambda_star, source_fn_n)
+    for each_ray in rays:
+        each_ray.calc_tau(n_depth_pts, radial_grid, chi_grid)
+        each_ray.formal_soln(source_fn_n)
+    J_fs = calc_J(rays, n_mu_pts, n_depth_pts, mu_grid)
     J_new = np.linalg.solve(np.identity(n_depth_pts) - (1.0 - epsilon)*Lambda_star, J_fs - np.dot((1.0 - epsilon)*Lambda_star, J_old))
     J_old = J_new
     ax.plot(chi_grid, J_new)
